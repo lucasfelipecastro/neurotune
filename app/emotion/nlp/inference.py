@@ -1,31 +1,23 @@
 from .model import tokenizer, model, device
-import torch, torch.nn.functional as F
+import torch
+import torch.nn.functional as F
 import emoji
-
-GOEMOTIONS_LABELS = [
-    'admiration', 'amusement', 'anger', 'annoyance', 'approval', 'caring', 'confusion',
-    'curiosity', 'desire', 'disappointment', 'disapproval', 'disgust', 'embarrassment',
-    'excitement', 'fear', 'gratitude', 'grief', 'joy', 'love', 'nervousness', 'optimism',
-    'pride', 'realization', 'relief', 'remorse', 'sadness', 'surprise', 'neutral'
-]
 
 def detect_emotion_from_text(text: str) -> dict:
     clean_text = emoji.replace_emoji(text, replace='')
-    inputs = tokenizer(clean_text, return_tensors='pt', truncation=True).to(device)
+    inputs = tokenizer(clean_text, return_tensors='pt', truncation=True, max_length=512).to(device)
 
     with torch.no_grad():
         outputs = model(**inputs)
         logits = outputs.logits
-        probs = F.sigmoid(logits)[0].cpu().numpy()
+        probs = F.softmax(logits, dim=1)[0].cpu().numpy()
 
-    # Catch emotions with probability greater than 0.3 (adjustable threshold)
-    emotion_scores = {
-        label: float(prob)
-        for label, prob in zip(GOEMOTIONS_LABELS, probs)
-        if prob > 0.3
+    # Get the emotion with highest probability
+    emotion_idx = probs.argmax()
+    emotion_label = model.config.id2label[emotion_idx]
+    emotion_score = float(probs[emotion_idx])
+
+    return {
+        'label': emotion_label,
+        'score': emotion_score
     }
-
-    # Sort by score
-    sorted_emotions = dict(sorted(emotion_scores.items(), key=lambda x: x[1], reverse=True))
-
-    return sorted_emotions

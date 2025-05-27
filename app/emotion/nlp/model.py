@@ -1,7 +1,7 @@
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 import torch
 
-MODEL_NAME = 'bhadresh-savani/roberta-base-go-emotions'
+MODEL_NAME = 'j-hartmann/emotion-english-distilroberta-base'
 
 tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
 model = AutoModelForSequenceClassification.from_pretrained(MODEL_NAME)
