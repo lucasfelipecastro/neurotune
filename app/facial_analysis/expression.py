@@ -16,3 +16,50 @@ face_mesh = mp_face_mesh.FaceMesh(
     min_detection_confidence=0.5,
     min_tracking_confidence=0.5
 )
+
+def analyze_facial_expression(frame):
+    '''
+    Analyzes the facial expression from a given video frame and returns the detected emotion and its confidence score.
+    Args:
+        frame (numpy.ndarray): The input image frame from the webcam (BGR format).
+    Returns:
+        dict: A dictionary with keys 'emotion' (str) and 'confidence' (float).
+    '''
+    # Convert the image to RGB
+    rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+    results = face_mesh.process(rgb_frame)
+
+    if not results.multi_face_landmarks:  # type: ignore
+        return {'emotion': 'neutral', 'confidence': 0.0}
+
+    face_landmarks = results.multi_face_landmarks[0].landmark  # type: ignore
+    h, w, _ = frame.shape
+
+    # Get coordinates for mouth and eyes
+    left_mouth = face_landmarks[LEFT_MOUTH]
+    right_mouth = face_landmarks[RIGHT_MOUTH]
+    left_eye = face_landmarks[LEFT_EYE]
+    right_eye = face_landmarks[RIGHT_EYE]
+
+    # Convert normalized coordinates to pixel values
+    left_mouth_point = np.array([left_mouth.x * w, left_mouth.y * h])
+    right_mouth_point = np.array([right_mouth.x * w, right_mouth.y * h])
+    left_eye_point = np.array([left_eye.x * w, left_eye.y * h])
+    right_eye_point = np.array([right_eye.x * w, right_eye.y * h])
+
+    # Calculate distances
+    mouth_width = np.linalg.norm(right_mouth_point - left_mouth_point)
+    eye_distance = np.linalg.norm(right_eye_point - left_eye_point)
+
+    # Smile ratio: higher means more likely to be smiling
+    smile_ratio = mouth_width / eye_distance if eye_distance > 0 else 0
+
+    # Simple threshold for smile detection (empirical value)
+    if smile_ratio > 1.8:
+        emotion = 'happy'
+        confidence = min((smile_ratio - 1.8) * 2, 1.0)
+    else:
+        emotion = 'neutral'
+        confidence = max(1.0 - (1.8 - smile_ratio), 0.5)
+
+    return {'emotion': emotion, 'confidence': float(confidence)}
