@@ -1,14 +1,9 @@
 import cv2
-import mediapipe as mp
+import numpy as np
+import mediapipe.python.solutions.face_mesh as mp_face_mesh
 
-
-def analyze_facial_expression(frame):
-    '''
-    Analyzes the facial expression from a given video frame and returns the detected emotion and its confidence score.
-    Args:
-        frame (numpy.ndarray): The input image frame from the webcam (BGR format).
-    Returns:
-        dict: A dictionary with keys 'emotion' (str) and 'confidence' (float).
-    '''
-
-    return {'emotion': 'neutral', 'confidence': 1.0} 
+# Landmark indices for mouth and eyes (MediaPipe Face Mesh)
+LEFT_MOUTH = 61
+RIGHT_MOUTH = 291
+LEFT_EYE = 33
+RIGHT_EYE = 263
