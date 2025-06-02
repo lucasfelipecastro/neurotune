@@ -55,11 +55,15 @@ def analyze_facial_expression(frame):
     smile_ratio = mouth_width / eye_distance if eye_distance > 0 else 0
 
     # Simple threshold for smile detection (empirical value)
-    if smile_ratio > 1.8:
+    if smile_ratio >= 0.51:
         emotion = 'happy'
-        confidence = min((smile_ratio - 1.8) * 2, 1.0)
-    else:
+        confidence = min((smile_ratio - 0.51) * 2, 1.0)
+    elif smile_ratio >= 0.20:
         emotion = 'neutral'
-        confidence = max(1.0 - (1.8 - smile_ratio), 0.5)
-
-    return {'emotion': emotion, 'confidence': float(confidence)}
+        confidence = 1.0 - abs(smile_ratio - 0.35)
+    else:
+        emotion = 'sad'
+        confidence = min((0.20 - smile_ratio) * 5, 1.0)
+        
+    print(f"Smile ratio: {smile_ratio:.2f}, Confidence: {confidence:.2f}")
+    return {'emotion': emotion,  'confidence': float(confidence)}

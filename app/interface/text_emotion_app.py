@@ -12,4 +12,5 @@ if st.button('Analyze Emotion'):
         st.warning('Please enter some text.')
     else:
         result = detect_emotion_from_text(user_input)
+        print('Smile ratio:', result.get('smile_ratio', "N/A"))
         st.success(f"Detected Emotion: **{result['label']}** ({result['score']:.2f})")
