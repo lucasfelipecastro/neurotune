@@ -17,4 +17,10 @@ if img_file_buffer is not None:
 
     # Analyze facial expression
     result = analyze_facial_expression(frame)
-    st.success(f"Detected Emotion: **{result['emotion']}** (Confidence: {result['confidence']:.2f})") 
+    st.success(f"Detected Emotion: **{result['emotion']}** (Confidence: {result['confidence']:.2f})")
+
+    # Draw bounding box if available
+    if result.get('bbox'):
+        (xmin, ymin, xmax, ymax) = result['bbox']
+        cv2.rectangle(frame, (xmin, ymin), (xmax, ymax), (0, 255, 0), 2)
+    st.image(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB), channels="RGB", caption="Detected Face") 

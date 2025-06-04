@@ -19,21 +19,28 @@ face_mesh = mp_face_mesh.FaceMesh(
 
 def analyze_facial_expression(frame):
     '''
-    Analyzes the facial expression from a given video frame and returns the detected emotion and its confidence score.
+    Analyzes the facial expression from a given video frame and returns the detected emotion, its confidence score, and the face bounding box.
     Args:
         frame (numpy.ndarray): The input image frame from the webcam (BGR format).
     Returns:
-        dict: A dictionary with keys 'emotion' (str) and 'confidence' (float).
+        dict: A dictionary with keys 'emotion' (str), 'confidence' (float), and 'bbox' (tuple or None).
     '''
     # Convert the image to RGB
     rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
     results = face_mesh.process(rgb_frame)
 
     if not results.multi_face_landmarks:  # type: ignore
-        return {'emotion': 'neutral', 'confidence': 0.0}
+        return {'emotion': 'neutral', 'confidence': 0.0, 'bbox': None}
 
     face_landmarks = results.multi_face_landmarks[0].landmark  # type: ignore
     h, w, _ = frame.shape
+
+    # Get all landmark points
+    xs = [lm.x * w for lm in face_landmarks]
+    ys = [lm.y * h for lm in face_landmarks]
+    xmin, xmax = int(min(xs)), int(max(xs))
+    ymin, ymax = int(min(ys)), int(max(ys))
+    bbox = (xmin, ymin, xmax, ymax)
 
     # Get coordinates for mouth and eyes
     left_mouth = face_landmarks[LEFT_MOUTH]
@@ -66,4 +73,4 @@ def analyze_facial_expression(frame):
         confidence = min((0.20 - smile_ratio) * 5, 1.0)
         
     print(f"Smile ratio: {smile_ratio:.2f}, Confidence: {confidence:.2f}")
-    return {'emotion': emotion,  'confidence': float(confidence)}
+    return {'emotion': emotion,  'confidence': float(confidence), 'bbox': bbox}
